@@ -279,7 +279,9 @@ public class SaboteurBoardState extends BoardState {
             }
         }
 
-        return this.intBoard; }
+        return this.intBoard; 
+    }
+
     public int[][] getHiddenIntBoard() {
         //update the int board, and provide it to the player with the hidden objectives set at EMPTY.
         //Note that this function is available to the player.
@@ -318,7 +320,9 @@ public class SaboteurBoardState extends BoardState {
             }
         }
 
-        return this.intBoard; }
+        return this.intBoard; 
+    }
+    
     public SaboteurTile[][] getHiddenBoard(){
         // returns the board in SaboteurTile format, where the objectives become the 8 tiles.
         // Note the inconsistency with the getHiddenIntBoard where the objectives become only -1
