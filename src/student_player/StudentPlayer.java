@@ -4,6 +4,9 @@ import boardgame.Move;
 
 import Saboteur.SaboteurPlayer;
 import Saboteur.SaboteurBoardState;
+import Saboteur.cardClasses.*;
+import Saboteur.SaboteurMove;
+
 
 /** A player file submitted by a student. */
 public class StudentPlayer extends SaboteurPlayer {
@@ -14,7 +17,7 @@ public class StudentPlayer extends SaboteurPlayer {
      * associate you with your agent. The constructor should do nothing else.
      */
     public StudentPlayer() {
-        super("xxxxxxxxx");
+        super("Version1");
     }
 
     /**
@@ -29,8 +32,23 @@ public class StudentPlayer extends SaboteurPlayer {
         MyTools.getSomething();
 
         // Is random the best you can do?
-        Move myMove = boardState.getRandomMove();
+        //Move myMove = boardState.getRandomMove();
 
+        System.out.println("The board state turn player is: " + boardState.getTurnPlayer());
+        System.out.println("Player Id: " + this.player_id);
+        
+        if (boardState.getTurnNumber() <= 1) {
+            Move myMove = boardState.getRandomMove();
+            return myMove;
+        }
+    	
+    	Move myMove = null;
+    	try {
+        	myMove = MonteCarlo.getNextMove(boardState, this.player_id);
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	
         // Return your move to be processed by the server.
         return myMove;
     }
