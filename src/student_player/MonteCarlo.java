@@ -17,7 +17,7 @@ import Saboteur.SaboteurBoardState;
 import Saboteur.SaboteurMove;
 
 public class MonteCarlo {
-	private static Hashtable<String, Data> map = new Hashtable<String, Data>();
+
 	private static Node winningNode;
 
 	// define Data
@@ -93,28 +93,38 @@ public class MonteCarlo {
 		if (winningNode != null) {
 			return winningNode.move;
 		}
-	
+		//explore(root.getChildren(), player_id);
 		long timeTake = System.currentTimeMillis() - time;
 		long cur = System.currentTimeMillis();
 		long end = cur + 1000 - timeTake;
-		int count = 0;
+		
 		while (System.currentTimeMillis() < end) {
 			Node node = decentWithUCT(root);
-			rollout(node, player_id);
-			count++;
+			playout(node, player_id);
 		}
+
 		Node optimalNode = Collections.max(root.getChildren(), Comparator.comparing(n -> (double) n.win / n.visited));
-		
-		// if there is a winning node 
-		if(winningNode != null) {
+	
+		if (winningNode != null) {
 			optimalNode = winningNode;
 		}
 		
 		return optimalNode.getMove();
 	}
+
+	// expand the given Node
+	private static void expandNode(Node node) {
+		ArrayList<SaboteurMove> allLegalMoves = node.getState().getAllLegalMoves();
+		allLegalMoves.forEach(m -> {
+			SaboteurBoardState boardState = (SaboteurBoardState) node.getState().clone();
+			boardState.processMove(m);
+			Node child = new Node(boardState, m, node);
+			node.getChildren().add(child);
+		});
+	}
 	
 	// UCT - Upper Confidence Trees
-	private static double computeUCT(Node node) {
+	private static double calculateUCT(Node node) {
 		if (node.visited == 0) {
 			return Integer.MAX_VALUE;
 		}
@@ -123,52 +133,42 @@ public class MonteCarlo {
 	}
 
 	private static Node decentWithUCT(Node node) {
-		while (node.getChildren().size() > 0) {
-			node = Collections.max(node.getChildren(), Comparator.comparing(n -> computeUCT(n)));
+		List<Node> children = node.getChildren();
+		while (children.size() > 0) {
+			node = Collections.max(children, Comparator.comparing(n -> calculateUCT(n)));
 		}		
 		return node;
 	}
 
-	// expand the given Node
-	private static void expandNode(Node node) {
-		node.getState().getAllLegalMoves().forEach(m -> {
-			SaboteurBoardState state = (SaboteurBoardState) node.getState().clone();
-			state.processMove(m);
-			Node child = new Node(state, m, node);
-			node.getChildren().add(child);
-		});
-	}
-
-	private static void rollout(Node node, int player_id) {
+	private static void playout(Node node, int player_id) {
 		SaboteurBoardState state = (SaboteurBoardState) node.getState().clone();
-		Random r = new Random();
 
 		int i = 0;
 		while (state.getWinner() == Board.NOBODY) {
 			Move move = state.getAllLegalMoves().get(0);
-			state.processMove((SaboteurMove) move);
+			state.processMove((SaboteurMove)move);
 			i++;
 		}
 
 		int winner = state.getWinner();
 		int reward = -1;
+
 		if (winner == player_id) {
-			reward = 56-2*node.state.getTurnNumber()-i;
+			reward = 56 - 2*node.state.getTurnNumber() - i;
 		} else if (winner == Board.DRAW) {
-			reward = 1;
+			reward = 0;
 		} else {
 			reward = 0;
 			if(i <= 1 && node.parent.children.size() >= 2) {
-				System.out.println("Size : " + node.parent.children.size());
 				node.parent.children.remove(node);
 				node.parent = null;
 			}
 		}
-		Node tNode = node;
-		while (tNode != null) {
-			tNode.visited++;
-			tNode.win += reward;
-			tNode = tNode.parent;
+		Node temp = node;
+		while (temp != null) {
+			temp.visited++;
+			temp.win += reward;
+			temp = temp.parent;
 		}
 	}
 
@@ -181,7 +181,7 @@ public class MonteCarlo {
 			for (SaboteurMove move : moves) {
                 SaboteurBoardState state = (SaboteurBoardState)nodes.get(i).getState().clone();
 				state.processMove(move);
-				if (state.getWinner()!=Board.NOBODY && state.getWinner() != player_id && state.getWinner()!= Board.DRAW) {
+				if (state.getWinner()!= Board.NOBODY && state.getWinner() != player_id && state.getWinner()!= Board.DRAW) {
 					if(nodes.size() > 1) {
 						nodes.remove(nodes.get(i));
 					}else {
@@ -194,7 +194,7 @@ public class MonteCarlo {
 		}
 	}
 	
-	public static void exploreTakeout(List<Node> nodes, int player_id) {
+	public static void explore(List<Node> nodes, int player_id) {
 		for(int i = 0; i < nodes.size(); i++) {
 			SaboteurBoardState state = (SaboteurBoardState) nodes.get(i).getState().clone();
 			Random r = new Random();

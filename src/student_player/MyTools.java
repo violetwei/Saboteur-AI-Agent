@@ -4,120 +4,153 @@ import java.util.*;
 
 import Saboteur.SaboteurBoardState;
 import Saboteur.SaboteurMove;
+import Saboteur.SaboteurPlayer;
 import Saboteur.cardClasses.*;
 
-
+// this class contains a bunch of helper methods
 public class MyTools {
+
     public static double getSomething() {
         return Math.random();
     }
 
-    private static final String[] tilesNoDeadEnd = {"0", "5", "5_flip", "6", "6_flip", "7_flip", "8", "9", "9_flip", "10"};
-	private static final List<String> tilesNoDeadEndList = Arrays.asList(tilesNoDeadEnd);
-	private static final String[] tilesDeadEnd = {"1", "2", "2_flip", "3", "3_flip", "4", "4_flip", "11", "11_flip","12", 
-			"12_flip", "13", "14", "14_flip", "15"};
-	private static final List<String> tilesDeadEndList = Arrays.asList(tilesDeadEnd);
+    // the list of Saboteur tiles without a dead end (observed from the Saboteur tiles' pics in the tiles folder)
+    private static final String[] saboteurTilesWithoutDeadEnd = {"0", "5", "5_flip", "6", "6_flip", "7_flip", "8", "9", "9_flip", "10"};
+    private static final List<String> withoutDeadEndSaboteurTiles = Arrays.asList(saboteurTilesWithoutDeadEnd);
+    
+    // the list of Saboteur tiles with a dead end (observed from the Saboteur tiles' pics in the tiles folder)
+	private static final String[] saboteurTilesWithDeadEnd = {"1", "2", "2_flip", "3", "3_flip", "4", "4_flip", "11", "11_flip", "12", "12_flip", "13", "14", "14_flip", "15"};
+	private static final List<String> withDeadEndSaboteurTiles = Arrays.asList(saboteurTilesWithDeadEnd);
 
-    public static boolean containsCard(ArrayList<SaboteurCard> saboteurDeck, String cardTypeName) {
-    	List<String> cards = getCardsName(saboteurDeck);
+    public static boolean containsCard(ArrayList<SaboteurCard> saboteurDeck, String expectCardType) {
+    	List<String> cards = getSaboteurCardNamesInDeck(saboteurDeck);
     	for (int i = 0; i < cards.size(); i++) {
-    		String cardType = cards.get(i).split(":")[0];
-    		if (cardType.contains(cardTypeName)) {
+            // Eg: "Tile:3", "Map", "Malus"
+    		String saboteurCardType = cards.get(i).split(":")[0];
+    		if (saboteurCardType.contains(expectCardType)) {
                 return true;   	
             }	
     	}
     	return false;
     }
 
-    public static List<String> getCardsName(ArrayList<SaboteurCard> saboteurDeck){
+    public static List<String> getSaboteurCardNamesInDeck(ArrayList<SaboteurCard> saboteurDeck){
     	List<String> cards = new ArrayList<String>();
     	for (int i = 0; i < saboteurDeck.size(); i++) {
-    		cards.add(i, saboteurDeck.get(i).getName());
+            String saboteurCardName = saboteurDeck.get(i).getName();
+    		cards.add(saboteurCardName);
     	}
     	return cards;
     }
 
-    public static int getObjective(SaboteurBoardState boardState) {
-    	if (getNextTileHidden(boardState) == 2 || 
-    			boardState.getHiddenBoard()[boardState.hiddenPos[1][0]][boardState.hiddenPos[1][1]].getIdx().equals("hidden2")) return 2;
+    public static int getObjTileNum(SaboteurBoardState boardState) {
+        SaboteurTile hiddenTile = boardState.getHiddenBoard()[boardState.hiddenPos[1][0]][boardState.hiddenPos[1][1]];
+        String hiddenTileIdx = hiddenTile.getIdx();
+    	if (hiddenTileIdx.equals("hidden2") || getNextHiddenTile(boardState) == 2) {
+            return 2;
+        }
     	for (int i = 0; i <= 2; i++) {
-    		SaboteurTile hiddenTile = boardState.getHiddenBoard()[boardState.hiddenPos[i][0]][boardState.hiddenPos[i][1]];
-    		if(hiddenTile.getIdx().equals("nugget")) {
+            SaboteurTile hiddenSaboteurTile = boardState.getHiddenBoard()[boardState.hiddenPos[i][0]][boardState.hiddenPos[i][1]];
+            String hiddenSaboteurTileIdx = hiddenSaboteurTile.getIdx();
+    		if(hiddenSaboteurTileIdx.equals("nugget")) {
     			return i;
     		}
     	}    	 	
     	return -1;    	
     }
     
-    public static int getNextTileHidden(SaboteurBoardState boardState) {
+    public static int getNextHiddenTile(SaboteurBoardState boardState) {
     	for (int i = 0; i <= 2; i++) {
-    		SaboteurTile hiddenSaboteurTile = boardState.getHiddenBoard()[boardState.hiddenPos[i][0]][boardState.hiddenPos[i][1]];
-    		if(hiddenSaboteurTile.getIdx() == "8") {
+            SaboteurTile hiddenSaboteurTile = boardState.getHiddenBoard()[boardState.hiddenPos[i][0]][boardState.hiddenPos[i][1]];
+            // if unrevealed, it will be "tile 8" instead of hidden 1, hidden 2 or nugget
+            String hiddenSaboteurTileName = hiddenSaboteurTile.getName();
+    		if (hiddenSaboteurTileName.contains("8")) {
     			return i;
     		}
     	}  	
     	return 0;
     }
 
-    public static boolean hasTileWithNoDeadEndCard(ArrayList<SaboteurMove> myLegalMoves) {
-    	
-    	for (int i = 0; i < myLegalMoves.size(); i++) {
-    		if (myLegalMoves.get(i).getCardPlayed() instanceof SaboteurTile) {
-    			SaboteurTile tile = (SaboteurTile) myLegalMoves.get(i).getCardPlayed();
-    			if(tilesNoDeadEndList.contains(tile.getIdx())) return true;
+    public static boolean containsSaboteurTileWithoutDeadEnd(ArrayList<SaboteurMove> curLegalMoves) {
+        boolean contains = false;
+    	for (int i = 0; i < curLegalMoves.size(); i++) {
+            SaboteurCard curSaboteurCard = curLegalMoves.get(i).getCardPlayed();
+    		if (curSaboteurCard instanceof SaboteurTile) {
+                SaboteurTile sabTile = (SaboteurTile)curLegalMoves.get(i).getCardPlayed();
+                String sabTileIdx = sabTile.getIdx();
+    			if (withoutDeadEndSaboteurTiles.contains(sabTileIdx))  {
+                    contains = true;
+                }
     		}
     	}
-    	
-    	return false;
+    	return contains;
     }
 
-    public static SaboteurMove destroyDeadEndAndGetMove(SaboteurBoardState boardState, int objTileNum) {
-		ArrayList<SaboteurMove> myLegalMoves = boardState.getAllLegalMoves();
-		int minDistance = 1000;
-		int bestMove = 0;
-		if (objTileNum == -1) objTileNum = 1; //if objective is unknown, Goal is middle tile
-		int[] goalXY = {boardState.hiddenPos[objTileNum][0], boardState.hiddenPos[objTileNum][1]};
-		
-		for (int i = 0; i < myLegalMoves.size(); i++) {
-			SaboteurMove move = myLegalMoves.get(i);
+    public static SaboteurMove destroyDeadEndCardAndGetMove(SaboteurBoardState boardState, int objTileNum) {
+        int optimalMoveIdx = 0;
+		ArrayList<SaboteurMove> allLegalMoves = boardState.getAllLegalMoves();
+		if (objTileNum == -1) {
+            objTileNum = 1; 
+        }
 
-    		if(move.getCardPlayed() instanceof SaboteurDestroy){
-    			int[] posMov = move.getPosPlayed();
-    			SaboteurTile tileToDestroy = boardState.getHiddenBoard()[posMov[0]][posMov[1]];
-    			if (tilesDeadEndList.contains(tileToDestroy.getIdx())) {
-    				int newDistance = getDistance(move, goalXY);
-		    		
-		    		if (newDistance < minDistance) {
-		    			bestMove = i;
-		    			minDistance = newDistance;
+        int[] targetPos = new int[2];
+        targetPos[0] = boardState.hiddenPos[objTileNum][0];
+        targetPos[1] = boardState.hiddenPos[objTileNum][1];
+        
+        int min = 500;
+		for (int i = 0; i < allLegalMoves.size(); i++) {
+            SaboteurMove curMove = allLegalMoves.get(i);
+            SaboteurCard curSaboteurCard = curMove.getCardPlayed();
+            // if the current Saboteur card is a Destroy card
+    		if (curSaboteurCard instanceof SaboteurDestroy) {
+    			int[] posPlayed = curMove.getPosPlayed();
+                SaboteurTile saboteurTileToBeDestroyed = boardState.getHiddenBoard()[posPlayed[0]][posPlayed[1]];
+                String saboteurTileToBeDestroyedIdx = saboteurTileToBeDestroyed.getIdx();
+    			if (withDeadEndSaboteurTiles.contains(saboteurTileToBeDestroyedIdx)) {
+    				int distance = getDistanceBetweenMoveAndTarget(curMove, targetPos);
+		    		// update optimalMove
+		    		if (distance < min) {
+		    			optimalMoveIdx = i;
+		    			min = distance;
 		    		}
     			}
     			
     		}
     	}
-		
-		return myLegalMoves.get(bestMove);
+		return allLegalMoves.get(optimalMoveIdx);
     }
     
-    public static int getDistance(SaboteurMove move, int[] goalXY) {
-		int[] moveXY = {move.getPosPlayed()[0], move.getPosPlayed()[1]};
-		int distance = Math.abs(moveXY[0] - goalXY[0]) + Math.abs(moveXY[1] - goalXY[1]);
+    public static int getDistanceBetweenMoveAndTarget(SaboteurMove move, int[] targetPos) {
+        int[] saboteurMovePos = new int[2];
+        saboteurMovePos[0] = move.getPosPlayed()[0];
+        saboteurMovePos[1] = move.getPosPlayed()[1];
+        int xDiff = Math.abs(saboteurMovePos[0] - targetPos[0]);
+        int yDiff = Math.abs(saboteurMovePos[1] - targetPos[1]);
+		int distance = (int)Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 		return distance;
 	}
 	
-	public static boolean existDeadEnd(SaboteurBoardState boardState) {
-		ArrayList<SaboteurMove> myLegalMoves = boardState.getAllLegalMoves();
-		for (int i = 0; i < myLegalMoves.size(); i++) {
-			SaboteurMove move = myLegalMoves.get(i);
-    		if(move.getCardPlayed() instanceof SaboteurDestroy){
-    			int[] posMov = move.getPosPlayed();
-    			SaboteurTile tileToDestroy = boardState.getHiddenBoard()[posMov[0]][posMov[1]];
-    			if (tilesDeadEndList.contains(tileToDestroy.getIdx()) && move.getPosPlayed()[0] > 5) {
-    				return true;
+	public static boolean existDeadEndSaboteurTile(SaboteurBoardState boardState) {
+        boolean isExists = false;
+		ArrayList<SaboteurMove> allLegalMoves = boardState.getAllLegalMoves();
+		for (int i = 0; i < allLegalMoves.size(); i++) {
+            SaboteurMove move = allLegalMoves.get(i);
+            SaboteurCard curSaboteurCard = move.getCardPlayed();
+            // if current Saboteur card is a Destroy card
+    		if (curSaboteurCard instanceof SaboteurDestroy) {
+    			int[] posPlayed = move.getPosPlayed();
+                SaboteurTile saboteurTileToBeDestroyed = boardState.getHiddenBoard()[posPlayed[0]][posPlayed[1]];
+                String saboteurTileToBeDestroyedIdx = saboteurTileToBeDestroyed.getIdx();
+    			if (posPlayed[0] > 5 && containsSaboteurTileWithDeadEnd(saboteurTileToBeDestroyedIdx)) {
+    				isExists = true;
 	    		}
-    		}
-    			
+    		}		
     	}
-		return false;
+		return isExists;
+    }
+
+    public static boolean containsSaboteurTileWithDeadEnd(String saboteurTileIdx) {
+        boolean contains = withDeadEndSaboteurTiles.contains(saboteurTileIdx);
+    	return contains;
     }
 }

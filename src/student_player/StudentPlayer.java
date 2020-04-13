@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import Saboteur.SaboteurBoardState;
 import Saboteur.cardClasses.*;
 import Saboteur.SaboteurMove;
+import Saboteur.SaboteurPlayer;
 
 
 /** A player file submitted by a student. */
@@ -33,42 +34,48 @@ public class StudentPlayer extends SaboteurPlayer {
         // For example, maybe you'll need to load some pre-processed best opening
         // strategies...
 
-        System.out.println("The board state turn player is: " + boardState.getTurnPlayer());
+        System.out.println("The Saboteur board state turn player is: " + boardState.getTurnPlayer());
         System.out.println("Player Id: " + this.player_id);
 
         SaboteurMove aiMove;
+        SaboteurPlayer aiPlayer;
+
     	ArrayList<SaboteurMove> saboteurLegalMove = boardState.getAllLegalMoves();
         ArrayList<SaboteurCard> saboteurDeck = boardState.getCurrentPlayerCards();
 
-        int objTileNum = MyTools.getObjective(boardState);
+        int objTileNum = MyTools.getObjTileNum(boardState);
         // Is random the best you can do?
         //Move myMove = boardState.getRandomMove();
 
-        if (MyTools.containsCard(saboteurDeck, "Destroy") && MyTools.existDeadEnd(boardState)) {
-        	aiMove = MyTools.destroyDeadEndAndGetMove(boardState, objTileNum);
+        // if the Saboteur deck contains a Destroy card and there is a dead end saboteur tile card
+        if (MyTools.containsCard(saboteurDeck, "Destroy") && MyTools.existDeadEndSaboteurTile(boardState)) {
+        	aiMove = MyTools.destroyDeadEndCardAndGetMove(boardState, objTileNum);
         	if (boardState.isLegal(aiMove)) {
                 return aiMove;
             }
         }
 
-        // If the AI has Map card and it doesn't know about the objective, it will use a Map Card.
+        // If the Saboteur deck contains a Map card and ai doesn't know about the objective, then use a Map card
         if (MyTools.containsCard(saboteurDeck, "Map") && objTileNum == -1) {       	
-        	int nextHiddenTile = MyTools.getNextTileHidden(boardState);
-			aiMove = new SaboteurMove(new SaboteurMap(),boardState.hiddenPos[nextHiddenTile][0], boardState.hiddenPos[nextHiddenTile][1],boardState.getTurnPlayer());
+        	int nextHiddenTile = MyTools.getNextHiddenTile(boardState);
+            aiMove = new SaboteurMove(new SaboteurMap(), boardState.hiddenPos[nextHiddenTile][0], 
+                                boardState.hiddenPos[nextHiddenTile][1], boardState.getTurnPlayer());
         	if (boardState.isLegal(aiMove)) {
                 return aiMove;
             }
         }
 
-        if (boardState.getNbMalus(boardState.getTurnPlayer()) > 0) {
-        	if (MyTools.containsCard(saboteurDeck, "Bonus")) {
-        		aiMove = new SaboteurMove(new SaboteurBonus(), 0, 0, boardState.getTurnPlayer());
-        		return aiMove;
-        	}    	
+        int x = 0, y = 0;
+
+        // the case which the ai will play a Bonus card
+        if (MyTools.containsCard(saboteurDeck, "Bonus") && boardState.getNbMalus(boardState.getTurnPlayer()) > 0) {
+            aiMove = new SaboteurMove(new SaboteurBonus(), x, y, boardState.getTurnPlayer());
+        	return aiMove;   	
         }
         
+        // if the Saboteur deck contains Malus, then ai will play the Malus card
         if (MyTools.containsCard(saboteurDeck, "Malus")) {
-        	aiMove = new SaboteurMove(new SaboteurMalus(), 0, 0, boardState.getTurnPlayer());
+        	aiMove = new SaboteurMove(new SaboteurMalus(), x, y, boardState.getTurnPlayer());
         	return aiMove;
         }
         
@@ -82,7 +89,11 @@ public class StudentPlayer extends SaboteurPlayer {
         	myMove = MonteCarlo.getNextMove(boardState, this.player_id);
     	} catch (Exception e) {
 			e.printStackTrace();
-		}
+        }
+        
+        if (myMove == null) {
+            myMove = boardState.getRandomMove();
+        }
     	
         // Return your move to be processed by the server.
         return myMove;
