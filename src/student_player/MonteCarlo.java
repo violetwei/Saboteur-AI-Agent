@@ -93,7 +93,6 @@ public class MonteCarlo {
 		if (winningNode != null) {
 			return winningNode.move;
 		}
-		//explore(root.getChildren(), player_id);
 		long timeTake = System.currentTimeMillis() - time;
 		long cur = System.currentTimeMillis();
 		long end = cur + 1000 - timeTake;
@@ -190,26 +189,6 @@ public class MonteCarlo {
 					i--;
 					break;
 				}
-			}
-		}
-	}
-	
-	public static void explore(List<Node> nodes, int player_id) {
-		for(int i = 0; i < nodes.size(); i++) {
-			SaboteurBoardState state = (SaboteurBoardState) nodes.get(i).getState().clone();
-			Random r = new Random();
-
-			while (state.getWinner() == Board.NOBODY) {
-				Move move = state.getAllLegalMoves().get(r.nextInt(state.getAllLegalMoves().size()));
-				state.processMove((SaboteurMove) move);
-			}
-			
-			if (state.getWinner() != player_id && state.getWinner()!= Board.DRAW) {
-				nodes.get(i).visited=1000;
-				nodes.get(i).win = 0;
-			} else {
-				nodes.get(i).visited=1000;
-				nodes.get(i).win=1000;
 			}
 		}
 	}

@@ -21,7 +21,7 @@ public class StudentPlayer extends SaboteurPlayer {
      * associate you with your agent. The constructor should do nothing else.
      */
     public StudentPlayer() {
-        super("Version1");
+        super("260664027");
     }
 
     /**
@@ -44,8 +44,57 @@ public class StudentPlayer extends SaboteurPlayer {
         ArrayList<SaboteurCard> saboteurDeck = boardState.getCurrentPlayerCards();
 
         int objTileNum = MyTools.getObjTileNum(boardState);
+        int nuggetY = MyTools.getGoalNuggetY(boardState.getHiddenBoard());
+        int bestXPos = MyTools.findBestX(boardState.getHiddenIntBoard(), saboteurLegalMove);
         // Is random the best you can do?
         //Move myMove = boardState.getRandomMove();
+
+        if (boardState.getNbMalus(boardState.getTurnPlayer()) > 0) {
+            if (MyTools.containsCard(saboteurDeck, "Bonus")) {
+                return MyTools.playBonusCard(saboteurDeck, boardState);
+            } else if (MyTools.containsCard(saboteurDeck, "Map")) {
+                return MyTools.playMapCard(saboteurDeck, boardState);
+            } else {
+                return MyTools.removeUnnecessaryCardFromDeck(saboteurDeck, boardState);
+            }
+        } 
+        
+        if (MyTools.containsCard(saboteurDeck, "Map")) {
+            return MyTools.playMapCard(saboteurDeck, boardState);
+        }
+
+        // hard code strategy
+        if (bestXPos > 8) {
+            if (MyTools.containsCard(saboteurDeck, "Malus")) {
+                SaboteurMove malusMove = MyTools.playMalusCard(saboteurDeck, boardState);
+                return malusMove;
+            }
+        } 
+        // update 
+        bestXPos = Math.min(bestXPos, 12);
+
+        if (bestXPos <= 10) {
+            if (MyTools.tileCardAsNextMove(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos) != null) {
+                return MyTools.tileCardAsNextMove(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos);
+            }
+        } else if (bestXPos == 11) {
+            // MyTools.tileCardAsNextMoveSpecialCaseOne(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos, nuggetY);
+            if (MyTools.tileCardAsNextMoveSpecialCaseOne(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos, nuggetY) != null) {
+                return MyTools.tileCardAsNextMoveSpecialCaseOne(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos, nuggetY);
+            }
+        } else if (bestXPos == 12) {
+            if (MyTools.tileCardAsNextMoveSpecialCaseTwo(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos, nuggetY) != null) {
+                return MyTools.tileCardAsNextMoveSpecialCaseTwo(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos, nuggetY);
+            }
+        } else {
+            if (MyTools.tileCardAsNextMove(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos) != null) {
+                return MyTools.tileCardAsNextMove(boardState.getHiddenIntBoard(), saboteurLegalMove, bestXPos);
+            }
+        }
+   
+        if (MyTools.removeUnnecessaryCardFromDeck(saboteurDeck, boardState) != null) {
+            return MyTools.removeUnnecessaryCardFromDeck(saboteurDeck, boardState);
+        }
 
         // if the Saboteur deck contains a Destroy card and there is a dead end saboteur tile card
         if (MyTools.containsCard(saboteurDeck, "Destroy") && MyTools.existDeadEndSaboteurTile(boardState)) {
@@ -66,12 +115,6 @@ public class StudentPlayer extends SaboteurPlayer {
         }
 
         int x = 0, y = 0;
-
-        // the case which the ai will play a Bonus card
-        if (MyTools.containsCard(saboteurDeck, "Bonus") && boardState.getNbMalus(boardState.getTurnPlayer()) > 0) {
-            aiMove = new SaboteurMove(new SaboteurBonus(), x, y, boardState.getTurnPlayer());
-        	return aiMove;   	
-        }
         
         // if the Saboteur deck contains Malus, then ai will play the Malus card
         if (MyTools.containsCard(saboteurDeck, "Malus")) {
@@ -86,16 +129,15 @@ public class StudentPlayer extends SaboteurPlayer {
     	
     	Move myMove = null;
     	try {
-        	myMove = MonteCarlo.getNextMove(boardState, this.player_id);
+            myMove = MonteCarlo.getNextMove(boardState, boardState.getTurnPlayer());
+            return myMove;
     	} catch (Exception e) {
 			e.printStackTrace();
         }
         
-        if (myMove == null) {
-            myMove = boardState.getRandomMove();
-        }
+        return boardState.getRandomMove();
     	
         // Return your move to be processed by the server.
-        return myMove;
+        //return myMove;
     }
 }
