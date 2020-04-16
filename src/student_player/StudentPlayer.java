@@ -104,7 +104,7 @@ public class StudentPlayer extends SaboteurPlayer {
             }
         }
 
-        // If the Saboteur deck contains a Map card and ai doesn't know about the objective, then use a Map card
+        // If the Saboteur deck contains a Map card and the objective is unknown, then use a Map card
         if (MyTools.containsCard(saboteurDeck, "Map") && objTileNum == -1) {       	
         	int nextHiddenTile = MyTools.getNextHiddenTile(boardState);
             aiMove = new SaboteurMove(new SaboteurMap(), boardState.hiddenPos[nextHiddenTile][0], 
@@ -138,6 +138,5 @@ public class StudentPlayer extends SaboteurPlayer {
         return boardState.getRandomMove();
     	
         // Return your move to be processed by the server.
-        //return myMove;
     }
 }
