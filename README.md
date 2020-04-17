@@ -1,18 +1,7 @@
 # SaboteurComp424
-Development of a final project for the comp 424 mcGill course
+Development of a final project for an AI course at McGill
 
-Please, find in mycourses - discussion - Final project a tutorial for the installation of the project.
-
-Update: 23/03:
-  Several bug were fixed:
-    - the deck has now the good number of map, which is 6 map instead of 4.
-    - a problem with the initilization of player's instance of BoardState is fixed.
-    - the path to the background image is now better managed, and should work under all OS.
-    
-The Autoplay class seems in fact to be working  - no update is needed (was simply a problem on my side): just make sure to have everything well compiled (easy on eclipse).
-
-Thank you for your comments and help to spot these mistakes.
-
-Good luck,
-
-Pierre
+Saboteur is a well known mining-themed board game. This Winter 2020 Comp 424 Final project aims to design an Artificial Intelligence searching algorithm and implement an AI agent for this popular turn-based strategy game. 
+With slightly modified rules, in our Saboteur game, two players will make a move consecutively. In each move, the corresponding player can either play a card he has in hand on a 15x15 board or discard a card by dropping it. 
+Available Saboteur cards are classified as tile cards which represent the tunnel created and four kinds of functional card: Malus, Bonus, Destroy and Map with different functionalities. 
+The ultimate goal of winning the game is to build a non blocking mining path from beginning position to the actual nugget card position.
