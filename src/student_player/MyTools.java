@@ -405,7 +405,7 @@ public class MyTools {
                 ArrayList<int[]> preMovesClone = (ArrayList<int[]>)previousMoves.clone();
                 preMovesClone.add(pos);
                 int[] newPos = new int[2];
-                newPos[0] = pos[0] - 1;
+                newPos[0] = pos[0] + 1;
                 newPos[1] = pos[1];
                 count += searchInBoardHelper(board, newPos, preMovesClone);
             }
