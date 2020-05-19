@@ -1,4 +1,4 @@
-# Saboteur AI Agent
+# AI Agent for Saboteur Game
 
 Development of an AI agent for the final project of an AI course at McGill
 
