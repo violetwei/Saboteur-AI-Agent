@@ -7,7 +7,9 @@ import Saboteur.SaboteurMove;
 import Saboteur.SaboteurPlayer;
 import Saboteur.cardClasses.*;
 
-// this class contains a bunch of helper methods
+/** This class contains a bunch of helper methods
+ *  & strategy implementations
+ */
 public class MyTools {
 
     public static double getSomething() {
